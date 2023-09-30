@@ -7,6 +7,7 @@ import {
   useStorageUpload,
 } from "@thirdweb-dev/react";
 import { contractAddress_zengoDao } from "@/const/contracts";
+import { formatNumberToContractDestination } from "@/lib/utils";
 
 interface IProposalsContext {
   evidence: IEvidence;
@@ -16,7 +17,7 @@ interface IProposalsContext {
   proposalInfo: IProposalInfo;
   setProposalInfo: (proposal: IProposalInfo) => void;
   clearFormState: () => void;
-  uploadEvidenceToIpfs: (fileToUpload: File) => void;
+  uploadEvidenceToIpfs: (fileToUpload: File) => Promise<string[]>;
   submitProposalForm: () => void;
   metadataUploadIsLoading: boolean;
   submitProposalFormIsLoading: boolean;
@@ -32,7 +33,6 @@ interface IProposalsContext {
     proposalId: number
   ) => void;
   addEvidenceCall: (props: IAddEvidenceCallProps) => void;
-  uploadFileToIpfs: (fileToUpload: File) => Promise<string>;
 }
 
 interface ISubmitProposalProps {
@@ -41,8 +41,8 @@ interface ISubmitProposalProps {
   evidenceDescription: string;
   evidenceUri: string;
   proposalType: string;
-  proposalEvidenceTimestamp: number;
   streetAddress: string;
+  proposalEvidenceTimestamp: number;
   latitude: number;
   longitude: number;
 }
@@ -140,22 +140,12 @@ export function ProposalsContextProvider({ children }: IProps) {
     setSubmitProposalSuccess(false);
   };
 
-  const uploadFileToIpfs = async (fileToUpload: File): Promise<string> => {
-    const uploadUrl = await upload({
+  const uploadEvidenceToIpfs = async (
+    fileToUpload: File
+  ): Promise<string[]> => {
+    return await upload({
       data: [fileToUpload],
       options: { uploadWithGatewayUrl: false, uploadWithoutDirectory: true },
-    });
-    return uploadUrl[0];
-  };
-
-  const uploadEvidenceToIpfs = async (fileToUpload: File) => {
-    const uploadUrl = await upload({
-      data: [fileToUpload],
-      options: { uploadWithGatewayUrl: false, uploadWithoutDirectory: true },
-    });
-    setEvidence({
-      ...evidence,
-      ipfsUri: uploadUrl[0],
     });
   };
 
@@ -166,18 +156,34 @@ export function ProposalsContextProvider({ children }: IProps) {
   const uploadProposalMetadataToIpfs = async () => {
     setMetadataUploadIsLoading(true);
 
-    const newProposal = {
+    const proposalJsonToIpfs = {
       ...proposalInfo,
-      location,
-      evidence,
+      location: {
+        ...location,
+        savedFormatedValues: {
+          lat: formatNumberToContractDestination(
+            location.gMapsLocationObject.lat
+          ),
+          lng: formatNumberToContractDestination(
+            location.gMapsLocationObject.lng
+          ),
+        },
+      },
+      evidence: {
+        ...evidence,
+        datetimestamp: new Date(evidence.date).getTime(),
+      },
     };
 
     const uploadUrl = await upload({
-      data: [newProposal],
+      data: [proposalJsonToIpfs],
       options: { uploadWithGatewayUrl: false, uploadWithoutDirectory: true },
     });
+
     console.log({ uploadUrl });
+
     setMetadataUploadIsLoading(false);
+
     if (uploadUrl) {
       return uploadUrl[0];
     }
@@ -192,8 +198,8 @@ export function ProposalsContextProvider({ children }: IProps) {
     evidenceDescription,
     evidenceUri,
     proposalType,
-    proposalEvidenceTimestamp,
     streetAddress,
+    proposalEvidenceTimestamp,
     latitude,
     longitude,
   }: ISubmitProposalProps) => {
@@ -205,10 +211,10 @@ export function ProposalsContextProvider({ children }: IProps) {
           evidenceDescription,
           evidenceUri,
           proposalType,
-          proposalEvidenceTimestamp,
           streetAddress,
-          latitude,
-          longitude,
+          formatNumberToContractDestination(proposalEvidenceTimestamp),
+          formatNumberToContractDestination(latitude),
+          formatNumberToContractDestination(longitude),
         ],
       });
       console.info("contract call successs", data);
@@ -230,16 +236,15 @@ export function ProposalsContextProvider({ children }: IProps) {
 
         await submitProposalCall({
           title: proposalInfo.title,
-          proposalDescription: proposalInfo.description,
+          proposalDescription: `${proposalInfo.description} - Proposal IPFS URI: ${metadataPath}`,
           proposalType: proposalInfo.type,
           evidenceDescription: evidence.description,
-          evidenceUri: metadataPath,
-          proposalEvidenceTimestamp: evidenceTimestamp,
+          evidenceUri: evidence.ipfsUri,
           streetAddress: location.locationText,
+          proposalEvidenceTimestamp: evidenceTimestamp,
           latitude: location.gMapsLocationObject.lat,
           longitude: location.gMapsLocationObject.lng,
         });
-        clearFormState();
       } else {
         console.error("Proposal metadata upload failure");
       }
@@ -344,7 +349,6 @@ export function ProposalsContextProvider({ children }: IProps) {
     concludeVotingIterationCall,
     voteToClassifyProposalCall,
     addEvidenceCall,
-    uploadFileToIpfs,
   };
 
   return (

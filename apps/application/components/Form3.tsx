@@ -1,6 +1,7 @@
 import { useProposalsContextState } from "@/contexts/ProposalsContext";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import UploadComponent from "./UploadComponent";
 
 export default function Form3() {
   const { evidence, setEvidence, uploadEvidenceToIpfs } =
@@ -23,23 +24,6 @@ export default function Form3() {
     };
     setEvidence(updatedEvidenceDescription);
   };
-
-  // react-dropzone
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    // When file is dropped, we upload it to IPFS
-    const uploadUrl = await uploadEvidenceToIpfs(acceptedFiles[0]);
-    const updatedEvidenceIpfsUrl = {
-      ...evidence,
-      ipfsUrl: uploadUrl,
-    };
-    setEvidence(updatedEvidenceIpfsUrl);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    maxFiles: 1,
-  });
 
   return (
     <div className="p-3 gap-5 grid grid-cols-2">
@@ -66,7 +50,7 @@ export default function Form3() {
       <div className="h-72 col-span-2">
         <div className="formLabel">Sube tu evidencia</div>
         <div className="flex justify-center items-center w-full h-full pb-10">
-          <label className="formFile">
+          {/* <label className="formFile">
             <div
               {...getRootProps({
                 className:
@@ -96,7 +80,8 @@ export default function Form3() {
               </p>
             </div>
           </label>
-          <input className="hidden" {...getInputProps()} />
+          <input className="hidden" {...getInputProps()} /> */}
+          <UploadComponent evidence={evidence} setEvidence={setEvidence} />
         </div>
       </div>
     </div>

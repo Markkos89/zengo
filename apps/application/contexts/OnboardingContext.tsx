@@ -167,7 +167,7 @@ export function OnboardingContextProvider({ children }: IProps) {
       setPoapTokenId(claimApiData.tokenId);
       // await poapScan(address, eventId); // now scanned on server side api route
       setVisible(false);
-      return claimApiData;
+      return claimApiData; // return claimApiData and perform the state updates in the components
     } else {
       console.log("claimed false");
       setVisible(false);
