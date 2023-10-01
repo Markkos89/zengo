@@ -1,6 +1,4 @@
 import { useProposalsContextState } from "@/contexts/ProposalsContext";
-import { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
 import UploadComponent from "./UploadComponent";
 
 export default function Form3() {
@@ -23,6 +21,16 @@ export default function Form3() {
       description: event.currentTarget.value,
     };
     setEvidence(updatedEvidenceDescription);
+  };
+
+  const handleFileDrop = async (acceptedFiles: File[]) => {
+    // Logic for handling the dropped files
+    const uploadUrl = await uploadEvidenceToIpfs(acceptedFiles[0]);
+    const updatedEvidenceIpfsUrl = {
+      ...evidence,
+      ipfsUri: uploadUrl[0],
+    };
+    setEvidence(updatedEvidenceIpfsUrl);
   };
 
   return (
@@ -81,7 +89,7 @@ export default function Form3() {
             </div>
           </label>
           <input className="hidden" {...getInputProps()} /> */}
-          <UploadComponent evidence={evidence} setEvidence={setEvidence} />
+          <UploadComponent handleFileDrop={handleFileDrop} />
         </div>
       </div>
     </div>

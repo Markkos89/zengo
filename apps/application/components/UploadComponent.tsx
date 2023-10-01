@@ -1,28 +1,16 @@
 import { useProposalsContextState } from "@/contexts/ProposalsContext";
 import { MediaRenderer } from "@thirdweb-dev/react";
-import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 interface IUploadComponentProps {
-  evidence: any;
-  setEvidence: any;
+  handleFileDrop: (acceptedFiles: File[]) => void;
 }
 
-const UploadComponent = ({ evidence, setEvidence }: IUploadComponentProps) => {
-  const { uploadEvidenceToIpfs } = useProposalsContextState();
-
-  const handleDrop = useCallback(async (acceptedFiles: File[]) => {
-    // Logic for handling the dropped files
-    const uploadUrl = await uploadEvidenceToIpfs(acceptedFiles[0]);
-    const updatedEvidenceIpfsUrl = {
-      ...evidence,
-      ipfsUri: uploadUrl[0],
-    };
-    setEvidence(updatedEvidenceIpfsUrl);
-  }, []);
+const UploadComponent = ({ handleFileDrop }: IUploadComponentProps) => {
+  const { evidence } = useProposalsContextState();
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: handleDrop,
+    onDrop: handleFileDrop,
     // accept: "image/*, .pdf, .doc, .docx",
     multiple: false,
   });

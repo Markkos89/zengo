@@ -1,13 +1,21 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { type ReactNode, useState } from "react";
 import { IEvidence, ILocation, IProposalInfo } from "@/interfaces";
 import {
   useContract,
+  useContractRead,
   useContractWrite,
   useStorageUpload,
 } from "@thirdweb-dev/react";
 import { contractAddress_zengoDao } from "@/const/contracts";
-import { formatNumberToContractDestination } from "@/lib/utils";
+import {
+  formatNumberToContractDestination,
+  formatProposalsFromContract,
+  formatProposalsWithVotingIterations,
+  formatRawArrayToCleanObjectNamedEntries,
+} from "@/lib/utils";
+import { useRouter } from "next/router";
+import { toEther, toUnits } from "@thirdweb-dev/sdk";
 
 interface IProposalsContext {
   evidence: IEvidence;
@@ -16,7 +24,6 @@ interface IProposalsContext {
   setLocation: (location: ILocation) => void;
   proposalInfo: IProposalInfo;
   setProposalInfo: (proposal: IProposalInfo) => void;
-  clearFormState: () => void;
   uploadEvidenceToIpfs: (fileToUpload: File) => Promise<string[]>;
   submitProposalForm: () => void;
   metadataUploadIsLoading: boolean;
@@ -33,6 +40,7 @@ interface IProposalsContext {
     proposalId: number
   ) => void;
   addEvidenceCall: (props: IAddEvidenceCallProps) => void;
+  proposalsToList: any[];
 }
 
 interface ISubmitProposalProps {
@@ -104,6 +112,8 @@ export function ProposalsContextProvider({ children }: IProps) {
   const [metadataUploadIsLoading, setMetadataUploadIsLoading] = useState(false);
   const [submitProposalSuccess, setSubmitProposalSuccess] = useState(false);
   const { mutateAsync: upload } = useStorageUpload();
+  const [proposalsToList, setProposalsToList] = useState<any[]>([]); // [proposalId, proposalId, proposalId
+  const router = useRouter();
 
   const [evidence, setEvidence] = useState<IEvidence>({
     date: "",
@@ -212,14 +222,16 @@ export function ProposalsContextProvider({ children }: IProps) {
           evidenceUri,
           proposalType,
           streetAddress,
-          formatNumberToContractDestination(proposalEvidenceTimestamp),
+          proposalEvidenceTimestamp,
           formatNumberToContractDestination(latitude),
           formatNumberToContractDestination(longitude),
         ],
       });
+
       console.info("contract call successs", data);
       setSubmitProposalSuccess(true);
       clearFormState();
+      router.push("/proposals");
     } catch (err) {
       console.error("contract call failure", err);
     }
@@ -227,27 +239,26 @@ export function ProposalsContextProvider({ children }: IProps) {
 
   const submitProposalForm = async () => {
     try {
-      const metadataPath = await uploadProposalMetadataToIpfs();
+      // const metadataPath = await uploadProposalMetadataToIpfs();
 
-      if (metadataPath) {
-        // parse proposal evidence date to timestamp
-        const evidenceDate = new Date(evidence.date);
-        const evidenceTimestamp = evidenceDate.getTime();
+      // if (metadataPath) {
+      const evidenceDate = new Date(evidence.date);
+      const evidenceTimestamp = evidenceDate.getTime();
 
-        await submitProposalCall({
-          title: proposalInfo.title,
-          proposalDescription: `${proposalInfo.description} - Proposal IPFS URI: ${metadataPath}`,
-          proposalType: proposalInfo.type,
-          evidenceDescription: evidence.description,
-          evidenceUri: evidence.ipfsUri,
-          streetAddress: location.locationText,
-          proposalEvidenceTimestamp: evidenceTimestamp,
-          latitude: location.gMapsLocationObject.lat,
-          longitude: location.gMapsLocationObject.lng,
-        });
-      } else {
-        console.error("Proposal metadata upload failure");
-      }
+      await submitProposalCall({
+        title: proposalInfo.title,
+        proposalDescription: proposalInfo.description,
+        proposalType: proposalInfo.type,
+        evidenceDescription: evidence.description,
+        evidenceUri: evidence.ipfsUri,
+        streetAddress: location.locationText,
+        proposalEvidenceTimestamp: evidenceTimestamp,
+        latitude: location.gMapsLocationObject.lat,
+        longitude: location.gMapsLocationObject.lng,
+      });
+      // } else {
+      //   console.error("Proposal metadata upload failure");
+      // }
     } catch (err) {
       console.error("contract call failure", { err });
     }
@@ -332,6 +343,45 @@ export function ProposalsContextProvider({ children }: IProps) {
     }
   };
 
+  const { data: getAllProposalsData, isLoading: getAllProposalsIsLoading } =
+    useContractRead(contractZengoDao, "getAllProposals");
+
+  // const { data: proposalEvidenceData, isLoading: proposalEvidenceIsLoading } =
+  //   useContractRead(contractZengoDao, "proposalEvidence", [0, 1]);
+
+  useMemo(() => {
+    // console.log({ getAllProposalsData });
+
+    if (getAllProposalsData && getAllProposalsData.length > 0) {
+      const proposalsRaw = formatProposalsFromContract(getAllProposalsData[0]);
+
+      const proposalsWithVotingIterations = formatProposalsWithVotingIterations(
+        proposalsRaw,
+        getAllProposalsData[1]
+      );
+      // console.log({ proposalsWithVotingIterations });
+
+      // format proposalas with voting iterations's evidences
+      const proposalsWithVotingIterationsAndEvidences =
+        proposalsWithVotingIterations.map((proposal: any) => {
+          const proposalEvidenceFormatted =
+            formatRawArrayToCleanObjectNamedEntries(getAllProposalsData[2]);
+
+          // TODO: here we need to identify the evidences of the proposal and
+          // TODO: in other part the evidences of the voting iterations
+          // TODO: avoiding contract calls
+
+          return {
+            ...proposal,
+            evidences: proposalEvidenceFormatted,
+          };
+        });
+
+      // console.log({ proposalsWithVotingIterationsAndEvidences });
+      setProposalsToList(proposalsWithVotingIterationsAndEvidences);
+    }
+  }, [getAllProposalsData]);
+
   const state = {
     evidence,
     setEvidence,
@@ -339,7 +389,6 @@ export function ProposalsContextProvider({ children }: IProps) {
     setLocation,
     proposalInfo,
     setProposalInfo,
-    clearFormState,
     uploadEvidenceToIpfs,
     submitProposalForm,
     metadataUploadIsLoading,
@@ -349,6 +398,7 @@ export function ProposalsContextProvider({ children }: IProps) {
     concludeVotingIterationCall,
     voteToClassifyProposalCall,
     addEvidenceCall,
+    proposalsToList,
   };
 
   return (
