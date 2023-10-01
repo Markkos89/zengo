@@ -164,6 +164,7 @@ export function ProposalsContextProvider({ children }: IProps) {
   );
 
   const uploadProposalMetadataToIpfs = async () => {
+    // NOT IN USE
     setMetadataUploadIsLoading(true);
 
     const proposalJsonToIpfs = {
