@@ -109,8 +109,8 @@ export default function DaoProposalsPage() {
             </div>
             {/* asd  */}
             {proposalsToList.length
-              ? proposalsToList.map((proposal: any) => (
-                  <div className="propCard relative">
+              ? proposalsToList.map((proposal: any, idx: number) => (
+                  <div className="propCard relative" key={idx}>
                     <div className="bg-white rounded-gen grid grid-cols-6 relative">
                       <div className="col-span-4 p-3">
                         <div className="italic">{`Propuesta #${
