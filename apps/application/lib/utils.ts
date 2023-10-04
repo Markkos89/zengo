@@ -10,9 +10,7 @@ export function shortenAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function formatNumberToContractDestination(
-  coordinateNumber: number
-): number {
+export function formatNumberContractType(coordinateNumber: number): number {
   const expNumber = Math.pow(10, 9);
 
   return expNumber * coordinateNumber;
@@ -22,7 +20,19 @@ export function formatProposalsFromContract(proposalsFromContract: any[]) {
   const proposalsRAW = proposalsFromContract.map((proposal: any) => {
     const proposalsFormatted =
       formatRawArrayToCleanObjectNamedEntries(proposal);
-    return proposalsFormatted;
+
+    const proposalWithConvertedValues = {
+      ...proposalsFormatted,
+      proposalId: Number(proposalsFormatted.proposalId.toString()),
+      latitude: formatNumberContractType(
+        Number(toEther(proposalsFormatted.latitude))
+      ),
+      longitude: formatNumberContractType(
+        Number(toEther(proposalsFormatted.longitude))
+      ),
+    };
+
+    return proposalWithConvertedValues;
   });
 
   return proposalsRAW;
@@ -76,12 +86,14 @@ export const formatProposalsWithVotingIterations = (
 
     const proposalVotingIterationsObject =
       formatRawArrayToCleanObjectNamedEntries(proposalVotingIterations);
+
+    // console.log({ proposalVotingIterationsObject });
+
     return {
       ...proposal,
       votingIterations: proposalVotingIterationsObject,
     };
   });
 
-  // console.log({ proposalsWithVotingIterations });
   return proposalsWithVotingIterations;
 };

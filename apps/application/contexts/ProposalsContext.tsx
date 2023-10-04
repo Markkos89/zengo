@@ -9,13 +9,12 @@ import {
 } from "@thirdweb-dev/react";
 import { contractAddress_zengoDao } from "@/const/contracts";
 import {
-  formatNumberToContractDestination,
+  formatNumberContractType,
   formatProposalsFromContract,
   formatProposalsWithVotingIterations,
   formatRawArrayToCleanObjectNamedEntries,
 } from "@/lib/utils";
 import { useRouter } from "next/router";
-import { toEther, toUnits } from "@thirdweb-dev/sdk";
 
 interface IProposalsContext {
   evidence: IEvidence;
@@ -172,12 +171,8 @@ export function ProposalsContextProvider({ children }: IProps) {
       location: {
         ...location,
         savedFormatedValues: {
-          lat: formatNumberToContractDestination(
-            location.gMapsLocationObject.lat
-          ),
-          lng: formatNumberToContractDestination(
-            location.gMapsLocationObject.lng
-          ),
+          lat: formatNumberContractType(location.gMapsLocationObject.lat),
+          lng: formatNumberContractType(location.gMapsLocationObject.lng),
         },
       },
       evidence: {
@@ -224,8 +219,8 @@ export function ProposalsContextProvider({ children }: IProps) {
           proposalType,
           streetAddress,
           proposalEvidenceTimestamp,
-          formatNumberToContractDestination(latitude),
-          formatNumberToContractDestination(longitude),
+          formatNumberContractType(latitude),
+          formatNumberContractType(longitude),
         ],
       });
 
@@ -365,12 +360,15 @@ export function ProposalsContextProvider({ children }: IProps) {
       // format proposalas with voting iterations's evidences
       const proposalsWithVotingIterationsAndEvidences =
         proposalsWithVotingIterations.map((proposal: any) => {
+          // console.log({ props: getAllProposalsData[2] });
           const proposalEvidenceFormatted =
             formatRawArrayToCleanObjectNamedEntries(getAllProposalsData[2]);
 
           // TODO: here we need to identify the evidences of the proposal and
           // TODO: in other part the evidences of the voting iterations
           // TODO: avoiding contract calls
+
+          console.log({ proposalEvidenceFormatted });
 
           return {
             ...proposal,

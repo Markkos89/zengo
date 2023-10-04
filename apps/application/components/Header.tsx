@@ -9,7 +9,6 @@ import Image from "next/image";
 import { CHAIN } from "@/const/chains";
 import { useOnboardingContextState } from "@/contexts/OnboardingContext";
 
-import logo from "../public/assets/zengo.svg";
 
 export default function Header() {
   const isMismatched = useNetworkMismatch();
