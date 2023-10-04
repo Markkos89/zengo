@@ -3,7 +3,11 @@ import Map from "./Map";
 import { MediaRenderer } from "@thirdweb-dev/react";
 
 export default function Form4() {
-  const { proposalInfo, evidence } = useProposalsContextState();
+  const {
+    proposalInfo,
+    evidence,
+    location: { gMapsLocationObject },
+  } = useProposalsContextState();
 
   return (
     <div className="px-3 gap-3 text-white">
@@ -20,7 +24,7 @@ export default function Form4() {
           </div>
 
           <div id="map-parent" className="grid h-52 relative">
-            <Map />
+            <Map lat={gMapsLocationObject.lat} lng={gMapsLocationObject.lng} />
           </div>
         </div>
 

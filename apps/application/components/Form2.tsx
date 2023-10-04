@@ -48,7 +48,10 @@ export default function Form2() {
           id="map-parent"
           className="h-96 bg-gray-300 rounded-med relative grid text-center"
         >
-          <Map />
+          <Map
+            lat={location.gMapsLocationObject.lat}
+            lng={location.gMapsLocationObject.lng}
+          />
         </div>
       </div>
     </div>

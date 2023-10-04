@@ -1,15 +1,33 @@
-import { useProposalsContextState } from "@/contexts/ProposalsContext";
-import { useLoadScript, GoogleMap, MarkerF } from "@react-google-maps/api";
+// import { useProposalsContextState } from "@/contexts/ProposalsContext";
+import {
+  useLoadScript,
+  GoogleMap,
+  MarkerF,
+  type Libraries,
+} from "@react-google-maps/api";
 import { useMemo, useState } from "react";
 
-const Map: React.FC = () => {
-  const {
-    location: { gMapsLocationObject },
-  } = useProposalsContextState();
+interface IMapProps {
+  lat?: number;
+  lng?: number;
+}
+
+const MAPLIBRARIES: Libraries = ["places"];
+
+const Map: React.FC<IMapProps> = ({ lat = 20.587834, lng = -100.389245 }) => {
+  // const {
+  //   location: { gMapsLocationObject },
+  // } = useProposalsContextState();
 
   const libraries = useMemo(() => ["places"], []);
 
-  const mapCenter = useMemo(() => gMapsLocationObject, [gMapsLocationObject]);
+  const mapCenter = useMemo(
+    () => ({
+      lat,
+      lng,
+    }),
+    [lat, lng]
+  );
 
   const mapOptions = useMemo<google.maps.MapOptions>(
     () => ({
@@ -25,7 +43,7 @@ const Map: React.FC = () => {
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY as string,
-    libraries: libraries as any,
+    libraries: MAPLIBRARIES,
   });
 
   if (!isLoaded) {
