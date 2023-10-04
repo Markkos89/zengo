@@ -11,7 +11,7 @@ import {
 import { contractAddress_zengoDao } from "@/const/contracts";
 import { toEther, toUnits } from "@thirdweb-dev/sdk";
 
-export default function proposalDetail() {
+export default function ProposalDetailPage() {
   const { proposalsToList } = useProposalsContextState();
 
   const proposal = proposalsToList[1];
