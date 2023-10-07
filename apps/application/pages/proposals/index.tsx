@@ -129,7 +129,7 @@ export default function DaoProposalsPage() {
                             <div className="pending"></div>
                           </div>
                         </div>
-                        <Link href={`/proposal/${proposal.proposalId}`}>
+                        <Link href={`/proposals/${proposal.proposalId}`}>
                           <span
                             className="
                                         bg-gray-300 hover:bg-gray-500 

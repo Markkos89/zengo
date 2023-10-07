@@ -349,27 +349,28 @@ export function ProposalsContextProvider({ children }: IProps) {
     // console.log({ getAllProposalsData });
 
     if (getAllProposalsData && getAllProposalsData.length > 0) {
-      const proposalsRaw = formatProposalsFromContract(getAllProposalsData[0]);
-
+      let proposalsRaw = formatProposalsFromContract(getAllProposalsData[0]);
+      proposalsRaw = proposalsRaw
+        .map((proposal: any) => {
+          if (
+            proposal.proposer !== "0x0000000000000000000000000000000000000000"
+          ) {
+            return proposal;
+          }
+        })
+        .filter((proposal: any) => proposal !== undefined);
       const proposalsWithVotingIterations = formatProposalsWithVotingIterations(
         proposalsRaw,
         getAllProposalsData[1]
       );
-      // console.log({ proposalsWithVotingIterations });
-
       // format proposalas with voting iterations's evidences
       const proposalsWithVotingIterationsAndEvidences =
         proposalsWithVotingIterations.map((proposal: any) => {
-          // console.log({ props: getAllProposalsData[2] });
           const proposalEvidenceFormatted =
             formatRawArrayToCleanObjectNamedEntries(getAllProposalsData[2]);
-
           // TODO: here we need to identify the evidences of the proposal and
           // TODO: in other part the evidences of the voting iterations
           // TODO: avoiding contract calls
-
-          console.log({ proposalEvidenceFormatted });
-
           return {
             ...proposal,
             evidences: proposalEvidenceFormatted,

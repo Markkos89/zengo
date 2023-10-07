@@ -60,7 +60,26 @@ const ProposalDetailsPage = () => {
     }
   }, [proposalsData]);
 
-  console.log({ proposalToShow, proposalEvidenceData });
+  const proposalEvidenceToShow = useMemo(() => {
+    if (!proposalEvidenceIsLoading && proposalEvidenceData) {
+      const formattedObj =
+        formatRawArrayToCleanObjectNamedEntries(proposalEvidenceData);
+      const evidenceTimestampFormatted = Number(
+        formattedObj.evidenceTimestamp.toString()
+      );
+      const evidenceDate = new Date(evidenceTimestampFormatted).toISOString();
+
+      const proposalWithConvertedValues = {
+        ...formattedObj,
+        evidenceTimestampFormatted: evidenceTimestampFormatted,
+        evidenceDate,
+      };
+
+      return proposalWithConvertedValues;
+    }
+  }, [proposalEvidenceData]);
+
+  console.log({ proposalEvidenceToShow, proposalEvidenceData });
 
   return (
     <ZengoLayout>
@@ -114,16 +133,14 @@ const ProposalDetailsPage = () => {
                 <div className="text-left font-bau p-3">
                   <div className="text-justify  text-sm pt-3 font-exo font-bold">
                     Evidencia del{" "}
-                    {proposalEvidenceData?.length &&
-                    proposalEvidenceData[0].evidenceTimestamp
-                      ? `${new Date(
-                          toEther(proposalEvidenceData.evidenceTimestamp)
-                        ).toISOString()}`
+                    {proposalEvidenceToShow &&
+                    proposalEvidenceToShow.evidenceDate
+                      ? `${proposalEvidenceToShow.evidenceDate.slice(0, 10)}`
                       : "01/01/2000"}
                   </div>
 
                   <div className="text-justify text-sm pt-3 font-exo">
-                    Foto del parque
+                    {proposalEvidenceToShow?.evidenceDescription}
                   </div>
                 </div>
               </div>
